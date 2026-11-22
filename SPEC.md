@@ -10,6 +10,7 @@
 
 ### 1. Voice file
 - Input: 5–10 past posts (pasted text or a file).
+- Sample format (e.g. `voices/tosin.md`): each sample is a `### Post N` heading, then `Platform:` and `Type:` lines, then the post text as plain text straight under `Type:`. Threads are voice samples only; PostPilot doesn't draft threads yet.
 - An LLM analyzes them and writes a **voice file**: tone, sentence length, vocabulary, emoji/hashtag habits, topics, and a few example posts.
 - Stored as a readable file (Markdown or JSON) the owner can view and edit.
 - Can be regenerated when the owner adds more posts.
