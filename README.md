@@ -1,6 +1,6 @@
 # PostPilot
 
-PostPilot helps small businesses and indie developers post consistently without sounding like a bot.
+PostPilot helps solo founders, small businesses and indie developers post consistently without sounding like a bot.
 
 ## How it works
 

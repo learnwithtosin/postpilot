@@ -1,5 +1,15 @@
 # PostPilot — MVP Spec
 
+## Who it's for
+
+**For:** solo founders, small businesses (1 to 20 people) and indie developers who already have a product and post sometimes, but can't stay consistent. They want to sound like themselves, not like AI, and they're happy to approve each post.
+
+**Not for:**
+- Businesses with no product or offer yet (build the offer first)
+- Brands with a social media team
+- Anyone who wants fully automatic posting with no review
+- Engagement farming and spam
+
 ## User story
 
 > As a small business owner or indie developer, I want an assistant that writes posts in my voice and lets me approve them from my phone, so I can post consistently without spending time writing every day.
