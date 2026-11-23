@@ -64,7 +64,7 @@
 | Runtime | Node.js (LTS) + TypeScript |
 | Telegram bot | [grammY](https://grammy.dev) (alternative: Telegraf) |
 | Database | SQLite via `better-sqlite3` (move to Postgres later if needed) |
-| LLM | An LLM API (e.g. Claude) for the voice file and drafts |
+| LLM | Gemini for now, Claude later. All calls go through `generate(prompt)` in `src/llm.ts`, so switching means changing one file |
 | Scheduler | `node-cron`, or a simple polling loop over the database |
 | Config | `.env` file for API keys and the owner's chat ID |
 
@@ -73,7 +73,7 @@
 1. **Draft cadence:** how many drafts per day, and does the bot send them on a schedule or on request?
 2. **Topics:** where do post ideas come from? Owner prompts, a topic list, product updates, or the AI's choice?
 3. **Voice input:** how does the owner supply past posts? Paste into Telegram, upload a file, or pull from X?
-4. **LLM choice:** which provider and model, and what's the cost per draft?
+4. **LLM choice:** Gemini for now, Claude later. Which Gemini model, what's the cost per draft, and when do we switch?
 5. **Time zones:** whose time zone sets the delivery schedule?
 6. **Unanswered drafts:** what happens to drafts the owner never responds to? Expire, or remind?
 7. **Hosting:** where does the bot run? A small VPS, Fly.io, Railway, or similar?
