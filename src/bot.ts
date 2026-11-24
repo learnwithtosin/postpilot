@@ -4,7 +4,7 @@ import { config } from "dotenv";
 import { Bot, InlineKeyboard, type Context } from "grammy";
 import { getDraft, saveDraft, setStatus, type DraftRow } from "./db.js";
 import { draftPosts, type Draft, type Platform } from "./drafting.js";
-import { generate } from "./llm.js";
+import { friendlyError, generate } from "./llm.js";
 import { X_LIMIT, removeEmDashes, xLength } from "./text.js";
 import { LESSONS_PATH, appendLesson, readLessons } from "./voiceFile.js";
 
@@ -89,8 +89,8 @@ async function sendDrafts(notes: string): Promise<void> {
     await sendDraft("X", notes, x);
     await sendDraft("LinkedIn", notes, linkedin);
   } catch (err) {
-    console.error(`Drafting failed: ${errorText(err)}`);
-    await tell(`Drafting failed: ${errorText(err)}\n\nPlease try again later.`);
+    console.error("Drafting failed:", err);
+    await tell(friendlyError(err, "drafting"));
   }
 }
 
@@ -195,8 +195,8 @@ Owner's reason: ${reason}`;
     const keyboard = new InlineKeyboard().text("Save", `ls:${key}`).text("Discard", `ld:${key}`);
     await tell(`Proposed lesson:\n\n${lesson}`, keyboard);
   } catch (err) {
-    console.error(`Lesson failed: ${errorText(err)}`);
-    await tell(`Couldn't write the lesson: ${errorText(err)}\n\nPlease try again later.`);
+    console.error("Lesson failed:", err);
+    await tell(friendlyError(err, "writing the lesson"));
   }
 }
 
