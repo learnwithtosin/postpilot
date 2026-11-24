@@ -92,6 +92,15 @@ export function readLessons(): string {
   return at === -1 ? "" : file.slice(at + "## Lessons".length).trim();
 }
 
+/** Append a lesson body (Rule / Applies to / Why / From edit lines) as the next "### Lesson N". Returns N. */
+export function appendLesson(body: string): number {
+  const file = existsSync(LESSONS_PATH) ? readFileSync(LESSONS_PATH, "utf8") : "# Lessons\n\n## Lessons\n";
+  const numbers = [...file.matchAll(/^### Lesson (\d+)/gm)].map((m) => Number(m[1]));
+  const next = Math.max(0, ...numbers) + 1;
+  writeFileSync(LESSONS_PATH, `${file.trimEnd()}\n\n### Lesson ${next}\n${body.trim()}\n`);
+  return next;
+}
+
 /** Current facts about the owner, without the file's heading and intro, or "" if missing. */
 export function readProfile(): string {
   if (!existsSync(PROFILE_PATH)) return "";

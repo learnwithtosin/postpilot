@@ -10,13 +10,17 @@
   "scripts": {
     "voice": "tsx src/voice.ts",
     "draft": "tsx src/draft.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bot": "tsx src/bot.ts"
   },
   "dependencies": {
     "@google/genai": "^3.6.1",
-    "dotenv": "^18.0.10"
+    "better-sqlite3": "^13.2.0",
+    "dotenv": "^18.0.10",
+    "grammy": "^1.48.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^22.20.5",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

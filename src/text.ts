@@ -49,7 +49,12 @@ export function bannedIn(text: string): string[] {
   return BANNED.filter((b) => lower.includes(b.toLowerCase()));
 }
 
-export const hasEmDash = (text: string): boolean => text.includes("—");
+/** Hashtags like "#buildinpublic" (Tosin doesn't use them). Not "C#" or "#1". */
+export function hashtagsIn(text: string): string[] {
+  return [...text.matchAll(/(?:^|\s)(#[\p{L}_][\p{L}\p{N}_]*)/gu)].map((m) => m[1]);
+}
+
+export const hasEmDash =(text: string): boolean => text.includes("—");
 
 /** Last-resort fix if the model keeps using em dashes. */
 export function removeEmDashes(text: string): string {
