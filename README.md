@@ -13,7 +13,19 @@ Later, PostPilot will post to X automatically and make short promo videos.
 
 ## Status
 
-Pre-development. No app code yet. See [SPEC.md](SPEC.md) for the MVP scope and plan.
+In development. What works now:
+
+- **Voice file:** `npm run voice` describes your writing style from your sample posts.
+- **Drafting:** `npm run draft` (or `/draft` in Telegram) writes an X post and a LinkedIn post in your voice.
+- **Telegram approval:** Approve, Edit or Skip each draft from your phone.
+- **Lessons:** when you edit or skip a draft, your reason becomes a rule that future drafts follow.
+- **Daily check-in:** the bot asks what you worked on each morning and drafts that day's post from your reply.
+
+Not built yet: scheduled delivery of approved posts. See [SPEC.md](SPEC.md) for the MVP scope and plan.
+
+## Running the bot
+
+`npm run bot` starts the Telegram bot. It only works while your laptop is on and `npm run bot` is running: if the laptop is off or asleep, it won't send drafts or the daily check-in. A missed check-in is sent when the bot is next running that day. Running on a small server is planned (see [SPEC.md](SPEC.md#later)).
 
 ## Planned stack
 

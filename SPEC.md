@@ -53,6 +53,7 @@
 
 ## Later
 
+- **Run on a small server** (e.g. a small VPS, Fly.io or Railway) so the bot works when the laptop is off
 - **Automatic posting to X** via the X API v2 (e.g. `twitter-api-v2`), with a Telegram confirmation and post link
 - Automatic posting to LinkedIn
 - Short promo videos

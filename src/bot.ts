@@ -2,7 +2,18 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { config } from "dotenv";
 import { Bot, InlineKeyboard, type Context } from "grammy";
-import { getDraft, saveDraft, setStatus, type DraftRow } from "./db.js";
+import { REMINDER_AFTER_MS, SPRINT_DAYS, checkinSettings, dayNumber, lagosNow } from "./checkin.js";
+import {
+  getCheckin,
+  getDraft,
+  markCheckinSent,
+  markCheckinSkipped,
+  markReminded,
+  saveCheckinNotes,
+  saveDraft,
+  setStatus,
+  type DraftRow,
+} from "./db.js";
 import { draftPosts, type Draft, type Platform } from "./drafting.js";
 import { friendlyError, generate } from "./llm.js";
 import { X_LIMIT, removeEmDashes, xLength } from "./text.js";
@@ -83,6 +94,54 @@ bot.command("draft", async (ctx) => {
   void sendDrafts(notes); // run in the background so the bot keeps answering
 });
 
+// Daily check-in: a timer checks every minute, so it catches up if the laptop was asleep at CHECKIN_TIME.
+const CHECKIN_TEXT = (day: number) =>
+  `Morning. What did you work on yesterday, or what's the plan today? Reply with short notes and I'll draft Day ${day}.`;
+
+/** Today's date and Day N, or a reason the check-in can't run. */
+function today(): { date: string; time: string; day: number; checkinTime: string } | { error: string } {
+  const settings = checkinSettings();
+  if ("error" in settings) return settings;
+  const { date, time } = lagosNow();
+  const day = dayNumber(date, settings.start);
+  if (day < 1 || day > SPRINT_DAYS) return { error: `Today is Day ${day}, outside the ${SPRINT_DAYS}-day sprint. Check SPRINT_START in .env.` };
+  return { date, time, day, checkinTime: settings.time };
+}
+
+async function sendCheckin(date: string, day: number): Promise<void> {
+  waiting = null; // the next reply is the check-in answer
+  markCheckinSent(date, day);
+  await tell(CHECKIN_TEXT(day));
+}
+
+async function checkinTick(): Promise<void> {
+  if (!ownerId) return;
+  const t = today();
+  if ("error" in t) return;
+  const row = getCheckin(t.date);
+  if (!row && t.time >= t.checkinTime) return sendCheckin(t.date, t.day);
+  if (row?.status === "sent" && !row.reminded_at && row.sent_at) {
+    const sentAt = Date.parse(`${row.sent_at.replace(" ", "T")}Z`); // SQLite datetime() is UTC
+    if (Date.now() - sentAt >= REMINDER_AFTER_MS) {
+      markReminded(t.date);
+      await tell(`Just a nudge: a few short notes on today is all I need to draft Day ${row.day}. Or /skip_today.`);
+    }
+  }
+}
+
+bot.command("checkin", async (ctx) => {
+  const t = today();
+  if ("error" in t) return void (await ctx.reply(t.error));
+  await sendCheckin(t.date, t.day);
+});
+
+bot.command("skip_today", async (ctx) => {
+  const t = today();
+  if ("error" in t) return void (await ctx.reply(t.error));
+  markCheckinSkipped(t.date, t.day);
+  await ctx.reply(`OK, no check-in for Day ${t.day}. See you tomorrow.`);
+});
+
 async function sendDrafts(notes: string): Promise<void> {
   try {
     const { x, linkedin } = await draftPosts(notes);
@@ -137,7 +196,17 @@ async function removeButtons(ctx: Context): Promise<void> {
 // Plain text: the answer to whatever the bot last asked.
 bot.on("message:text", async (ctx) => {
   const text = ctx.message.text.trim();
-  if (text.startsWith("/")) return void (await ctx.reply("Commands: /draft <notes>, /cancel"));
+  if (text.startsWith("/")) return void (await ctx.reply("Commands: /draft <notes>, /checkin, /skip_today, /cancel"));
+  if (!waiting) {
+    const t = today();
+    const row = "error" in t ? undefined : getCheckin(t.date);
+    if (row?.status === "sent") {
+      saveCheckinNotes(row.date, text);
+      await ctx.reply(`Got it. Drafting Day ${row.day}...`);
+      void sendDrafts(`Day ${row.day} of ${SPRINT_DAYS}: ${text}`);
+      return;
+    }
+  }
   const draft = waiting && getDraft(waiting.draftId);
   if (!waiting || !draft) return void (await ctx.reply("Send /draft <your notes> to get drafts."));
 
@@ -219,7 +288,15 @@ process.on("unhandledRejection", (err) => console.error(`Unhandled: ${errorText(
 process.on("uncaughtException", (err) => console.error(`Uncaught: ${errorText(err)}`));
 
 console.log(ownerId ? `Bot starting. Owner chat: ${ownerId}.` : "Bot starting. No owner yet: send /start from your phone.");
-bot.start({ onStart: (me) => console.log(`Running as @${me.username}. Ctrl+C to stop.`) }).catch((err) => {
+const settings = checkinSettings();
+console.log("error" in settings ? `Daily check-in off: ${settings.error}` : `Daily check-in at ${settings.time} Lagos time.`);
+const tick = () => void checkinTick().catch((err) => console.error("Check-in failed:", err));
+const onStart = (me: { username?: string }) => {
+  console.log(`Running as @${me.username}. Ctrl+C to stop.`);
+  tick();
+  setInterval(tick, 60_000);
+};
+bot.start({ onStart }).catch((err) => {
   console.error(`Bot stopped: ${errorText(err)}. Check TELEGRAM_BOT_TOKEN and your connection.`);
   process.exit(1);
 });
