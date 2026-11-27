@@ -77,3 +77,26 @@ export function cleanModelOutput(text: string): string {
   if (/^["“].*["”]$/s.test(out)) out = out.slice(1, -1).trim();
   return out;
 }
+
+/** Split text into Telegram-sized messages (4096 characters max), breaking between lines where possible. */
+export function splitMessage(text: string, limit = 4096): string[] {
+  const chunks: string[] = [];
+  let current = "";
+  for (let line of text.split("\n")) {
+    while (line.length > limit) {
+      if (current) chunks.push(current);
+      current = "";
+      chunks.push(line.slice(0, limit));
+      line = line.slice(limit);
+    }
+    const next = current ? `${current}\n${line}` : line;
+    if (next.length > limit) {
+      if (current) chunks.push(current);
+      current = line;
+    } else {
+      current = next;
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks.filter((c) => c.trim()); // Telegram rejects empty or blank messages
+}

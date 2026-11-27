@@ -16,8 +16,8 @@ import {
 } from "./db.js";
 import { draftPosts, type Draft, type Platform } from "./drafting.js";
 import { friendlyError, generate } from "./llm.js";
-import { X_LIMIT, removeEmDashes, xLength } from "./text.js";
-import { LESSONS_PATH, appendLesson, readLessons } from "./voiceFile.js";
+import { X_LIMIT, removeEmDashes, splitMessage, xLength } from "./text.js";
+import { LESSONS_PATH, appendLesson, parseLessons, readLessons } from "./voiceFile.js";
 
 config({ quiet: true });
 
@@ -77,6 +77,35 @@ bot.use(async (ctx, next) => {
 });
 
 bot.command("start", (ctx) => ctx.reply("You're the owner. Send /draft <your notes> to get drafts."));
+
+// /lessons: every lesson's Rule. /lessons N: lesson N in full.
+bot.command("lessons", async (ctx) => {
+  let lessons: ReturnType<typeof parseLessons>;
+  try {
+    lessons = parseLessons();
+  } catch (err) {
+    console.error("Couldn't read lessons:", err);
+    return void (await ctx.reply("I couldn't read the lessons file. Check the terminal for details."));
+  }
+  if (!lessons.length) {
+    return void (await ctx.reply("No lessons yet. They're added when you edit or skip a draft and tap Save."));
+  }
+
+  const arg = ctx.match.trim();
+  if (!arg) {
+    const list = lessons.map((l) => `${l.number}. ${l.body.match(/^Rule:\s*(.+)$/m)?.[1] ?? l.body.split("\n")[0]}`);
+    const text = `Lessons (send /lessons N to see one in full):\n\n${list.join("\n")}`;
+    for (const chunk of splitMessage(text)) await ctx.reply(chunk);
+    return;
+  }
+  if (!/^\d+$/.test(arg)) return void (await ctx.reply("Send /lessons for the list, or /lessons 3 for one lesson."));
+  const lesson = lessons.find((l) => l.number === Number(arg));
+  if (!lesson) {
+    const numbers = lessons.map((l) => l.number).join(", ");
+    return void (await ctx.reply(`There's no Lesson ${arg}. Lessons you have: ${numbers}.`));
+  }
+  for (const chunk of splitMessage(`Lesson ${lesson.number}\n${lesson.body}`)) await ctx.reply(chunk);
+});
 
 bot.command("cancel", async (ctx) => {
   waiting = null;
@@ -196,7 +225,7 @@ async function removeButtons(ctx: Context): Promise<void> {
 // Plain text: the answer to whatever the bot last asked.
 bot.on("message:text", async (ctx) => {
   const text = ctx.message.text.trim();
-  if (text.startsWith("/")) return void (await ctx.reply("Commands: /draft <notes>, /checkin, /skip_today, /cancel"));
+  if (text.startsWith("/")) return void (await ctx.reply("Commands: /draft <notes>, /checkin, /skip_today, /lessons, /cancel"));
   if (!waiting) {
     const t = today();
     const row = "error" in t ? undefined : getCheckin(t.date);
@@ -293,6 +322,15 @@ console.log("error" in settings ? `Daily check-in off: ${settings.error}` : `Dai
 const tick = () => void checkinTick().catch((err) => console.error("Check-in failed:", err));
 const onStart = (me: { username?: string }) => {
   console.log(`Running as @${me.username}. Ctrl+C to stop.`);
+  bot.api
+    .setMyCommands([
+      { command: "draft", description: "Draft X and LinkedIn posts from your notes" },
+      { command: "checkin", description: "Send today's check-in now" },
+      { command: "skip_today", description: "Skip today's check-in" },
+      { command: "lessons", description: "List lessons, or /lessons N for one" },
+      { command: "cancel", description: "Stop waiting for an edit or reason" },
+    ])
+    .catch((err) => console.error(`Couldn't set the command menu: ${errorText(err)}`));
   tick();
   setInterval(tick, 60_000);
 };

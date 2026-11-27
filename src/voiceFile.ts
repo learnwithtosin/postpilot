@@ -92,6 +92,14 @@ export function readLessons(): string {
   return at === -1 ? "" : file.slice(at + "## Lessons".length).trim();
 }
 
+/** Each lesson under "## Lessons" as its number and its lines (Rule, Applies to, Why, From edit). */
+export function parseLessons(): Array<{ number: number; body: string }> {
+  const parts = readLessons().split(/^### Lesson (\d+)[ \t]*$/m);
+  const lessons: Array<{ number: number; body: string }> = [];
+  for (let i = 1; i < parts.length; i += 2) lessons.push({ number: Number(parts[i]), body: parts[i + 1].trim() });
+  return lessons;
+}
+
 /** Append a lesson body (Rule / Applies to / Why / From edit lines) as the next "### Lesson N". Returns N. */
 export function appendLesson(body: string): number {
   const file = existsSync(LESSONS_PATH) ? readFileSync(LESSONS_PATH, "utf8") : "# Lessons\n\n## Lessons\n";

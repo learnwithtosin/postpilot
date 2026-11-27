@@ -18,8 +18,8 @@ In development. What works now:
 - **Voice file:** `npm run voice` describes your writing style from your sample posts.
 - **Drafting:** `npm run draft` (or `/draft` in Telegram) writes an X post and a LinkedIn post in your voice.
 - **Telegram approval:** Approve, Edit or Skip each draft from your phone.
-- **Lessons:** when you edit or skip a draft, your reason becomes a rule that future drafts follow.
-- **Daily check-in:** the bot asks what you worked on each morning and drafts that day's post from your reply.
+- **Lessons:** when you edit or skip a draft, your reason becomes a rule that future drafts follow. Send `/lessons` in Telegram to list them, or `/lessons N` to see one in full.
+- **Daily check-in:** the bot asks what you worked on each morning and drafts that day's post from your reply. `/checkin` sends one now and `/skip_today` skips today's.
 
 Not built yet: scheduled delivery of approved posts. See [SPEC.md](SPEC.md) for the MVP scope and plan.
 

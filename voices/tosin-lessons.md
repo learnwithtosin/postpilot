@@ -79,3 +79,15 @@ Rule: Be specific about what the build does: name the actual features and steps,
 Applies to: build updates
 Why: specifics show real proof of work.
 From edit: Day 4 review.
+
+### Lesson 12
+Rule: Name the third-party tools I use; only keep my own product unnamed.
+Applies to: all posts
+Why: Clay is a tool I use, not the one I'm building.
+From edit: draft called it "the tool I'm building" instead of Clay.
+
+### Lesson 13
+Rule: Explain what the result proved, not just the steps taken.
+Applies to: build updates
+Why: LinkedIn should explain what the result proved, not just list the steps.
+From edit: Draft listed exporting 2 rows, owner edited to state it confirmed exports follow the view.
